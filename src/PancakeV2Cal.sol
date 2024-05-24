@@ -16,7 +16,7 @@ import './utils/Common.sol';
  */
 contract PancakeCal is Ownable {
     // value for handling fixed point
-    uint256 public DENOMINATOR = 10 ** 18;
+    uint256 public DENOMINATOR = 10 ** 15;
 
     // public contract for pancakeswap factory & router
     IPancakeFactory public pancakeFactory;
@@ -88,20 +88,22 @@ contract PancakeCal is Ownable {
         symbol1 = IERC20(token1).symbol();
 
         // current reserves of token 0, 1 in the pool
-        (uint256 reserve0, uint256 reserve1, ) = IPancakePair(pool).getReserves();
+        (startReserve, endReserve, ) = IPancakePair(pool).getReserves();
+        uint256 k = startReserve * endReserve;
         if (rangeType == 0) {
-            current = reserve0;
+            current = startReserve;
+            decimals = decimals0;
         } else {
-            current = reserve1;
+            current = endReserve;
             decimals = decimals1;
             decimals1 = decimals0;
             decimals0 = decimals;
         }
 
-        startReserve = reserve0 * reserve1 * DENOMINATOR * (10 ** decimals0) / (startPrice * (10 ** decimals1));
+        startReserve = k * DENOMINATOR / startPrice  * (10 ** decimals0) / (10 ** decimals1);
         startReserve = sqrt(startReserve);
 
-        endReserve = reserve0 * reserve1 * DENOMINATOR * (10 ** decimals0) / (endPrice * (10 ** decimals1));
+        endReserve = k * DENOMINATOR / endPrice  * (10 ** decimals0) / (10 ** decimals1);
         endReserve = sqrt(endReserve);
     }
 
